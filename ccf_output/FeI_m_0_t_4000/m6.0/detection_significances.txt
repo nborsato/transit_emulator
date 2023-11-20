@@ -1,0 +1,4 @@
+Detection significance for 1 transits: 12.7
+Detection significance for 2 transits: 19.1
+Detection significance for 3 transits: 23.1
+Detection significance for 4 transits: 21.7
