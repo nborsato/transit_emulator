@@ -4,7 +4,7 @@ A simple transit emulator used to test detection significances of the cross-corr
 
 ## Installation and Setup
 
-This repository uses standard Python libraries, along with the cross-correlation library [tayph](https://github.com/Hoeijmakers/tayph), which needs to be installed. Once all relevant libraries are installed, the program should run right off the bat. You can control the emulator's parameters in the `0_parameters.json` file. Use these to change the emulator's configuration.
+This repository uses standard Python libraries, along with the cross-correlation library [tayph](https://github.com/Hoeijmakers/tayph), which needs to be installed. Once all relevant libraries are installed, the program should run right off the bat. You can control the emulator's parameters in the `0_parameters.json` file. Use these to change the emulator's configuration. The example spectra come from the Mantis Network templates, which are also used as cross-correlation templates, however one could easily use other transmission spectra.
 
 ## Usage
 To run the code, just run the numbered python files one after the other. 

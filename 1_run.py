@@ -35,6 +35,7 @@ rv_bounds = params["rv_bounds"]  # radial velocity bounds of the CCF function
 kpvsys_min = params["kpvsys_min"]  # minimum kpvsys value
 kpvsys_max = params["kpvsys_max"]  # maximum kpvsys value
 template_name = params["template_name"]  # name of the template used in the analysis
+planet_model = params["planet_model"]
 wendel_min = params["wendel_min"]  # spectrographs minimum wavelength range
 wendel_max = params["wendel_max"]  # spectrographs maximum wavelength range
 trim_val = params["trim_val"]  # how many pixels you want to trim off the CCF function to reduce edge effects
@@ -43,7 +44,7 @@ mag_vals = params["mag_vals"]  # Magnitudes you want to simulate
 number_of_cores = params["cores"]
 
 # Read the initial spectrum template from a FITS file
-wave, flux = read_kitz_template(f"{template_name}.fits")
+wave, flux = read_kitz_template(f"{planet_model}.fits")
 
 # Reduce the spectrum's resolution
 wave, flux = reduce_resolution(wave, flux, resolution)

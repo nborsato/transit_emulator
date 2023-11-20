@@ -10,6 +10,7 @@
   "rv_bounds": 200.0,
   "kpvsys_min": 0,
   "kpvsys_max": 400,
+  "planet_model": "FeI_m_0_t_4000",
   "template_name": "FeI_m_0_t_4000",
   "wendel_min": 383,
   "wendel_max": 885,
