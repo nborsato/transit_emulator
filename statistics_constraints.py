@@ -194,7 +194,7 @@ def perform_noise_injection_resampling(rv, data, num_resamples, model_peak):
     return np.array(resampled_params), np.array(deviations)
 
 
-def obtain_detection_sig(kpvsys, rv, bootstrap_iterations=1000, ccf_amplitude=-0.003, v_orb=234):
+def obtain_detection_sig(kpvsys, rv, bootstrap_iterations=1000, ccf_amplitude=-0.003, v_orb=198):
     """
     Obtain the detection significance based on the kp-vsys array and radial velocity grid.
 

@@ -27,7 +27,7 @@ def analyze_transits(num_transits, kpvsyss, rv, plot=False):
 
     # Bin down the radial velocity data and fit a Gaussian to it
     binned_rv = bin_down_data(rv)
-    binned_ccf = bin_down_data(kp_n_transit[234])  # Assuming the orbital velocity index is 234
+    binned_ccf = bin_down_data(kp_n_transit[198])  # Assuming the orbital velocity index is 234
     rv_grid, y_data, fitted_data, params, diag_matrix = fit_gaussian(binned_ccf, binned_rv)
 
     # Invert the data for plotting
@@ -67,8 +67,6 @@ for mag_value in mag_vals:
         # Analyze for different numbers of transits
         transit_numbers = range(1, len(kpvsyss) + 1)
         results = {}
-
-        trim_val = 750
 
         for num in transit_numbers:
             sig = analyze_transits(num, kpvsyss, rv, plot=False)
