@@ -1,3 +1,6 @@
+import pdb
+
+
 def calculate_orbital_velocity(period, semi_major_axis, period_unit="days", axis_unit="AU"):
     """
     Calculate the orbital velocity of a planet given its period and semi-major axis.
@@ -51,7 +54,7 @@ def calculate_phase_angle(t, t0, p):
     """
     import numpy as np
 
-    return 2 * np.pi * (t - t0) / p
+    return (t - t0) / p
 
 
 def calculate_radial_velocity(v_orb, phase_angle, v_sys):
@@ -68,7 +71,9 @@ def calculate_radial_velocity(v_orb, phase_angle, v_sys):
     """
     import numpy as np  # Importing NumPy for mathematical operations
 
+    phase_angle = 1 + phase_angle
+    phase_angle[(phase_angle>1)] = phase_angle[(phase_angle>1)]-1
     # Calculate the radial velocity based on the provided parameters
-    vr = v_orb * np.sin(phase_angle) + v_sys
+    vr = v_orb * np.sin(2.0 * np.pi*phase_angle)*(-1.0)
 
     return vr

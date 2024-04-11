@@ -1,3 +1,6 @@
+import pdb
+
+
 def calculate_ccf(wld, fxd, wl, fx2,rv_range):
     """
     Cross-correlate a given spectrum with a template.
@@ -85,6 +88,33 @@ def apply_cross_correlation(waves, fluxes, rv_bounds, template):
 
     return ccs, cc[0]  # Return cross-correlation function and radial velocity grid
 
+
+def make_kp_vsys(ccf, phases, kp_range=[0, 400]):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import scipy.ndimage as scint
+    from scipy.interpolate import interp1d
+    from tqdm import tqdm
+
+    inclination = 87.2
+
+    kps = np.arange(kp_range[0], kp_range[1], 1)
+
+    kpvsys = []
+    for kp in kps:
+        shifted_ccf = ccf.copy()
+        shifted_phases = phases.copy()
+
+        rv = kp * np.sin(2.0 * np.pi * shifted_phases) * np.sin(np.radians(inclination)) * (-1.0)
+
+        for i in range(len(shifted_ccf)):
+            shifted_ccf[i, :] = scint.shift(shifted_ccf[i], rv[i], mode='nearest', order=1)
+
+        kpvsys_row = np.nansum(shifted_ccf, axis=0)
+        rv = np.linspace(-1000, 1000, len(kpvsys_row))
+        kpvsys.append(kpvsys_row)
+
+    return kpvsys
 
 def kp_vsys_diagram(array, phases, kp_values, velocity_semi_amplitude):
     """

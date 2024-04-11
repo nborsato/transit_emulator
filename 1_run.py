@@ -28,7 +28,7 @@ t0 = params["t0"]  # time at which phase is zero in days
 P = params["P"]  # orbital period in days
 semi_major_axis = params["semi_major_axis"]  # semi-major axis in AU
 vsys = params["vsys"]  # systemic velocity in km/s
-velocity_semiamplitude = params["velocity_semiamplitude"] + 38
+velocity_semiamplitude = params["velocity_semiamplitude"]
 exposure_time = params["exposure_time"]  # the simulated exposure time of the transit
 resolution = params["resolution"]  # spectrograph resolution
 rv_bounds = params["rv_bounds"]  # radial velocity bounds of the CCF function
@@ -42,8 +42,8 @@ trim_val = params["trim_val"]  # how many pixels you want to trim off the CCF fu
 number_transit = params["number_transit"]  # number of transits to simulate
 mag_vals = params["mag_vals"]  # Magnitudes you want to simulate
 number_of_cores = params["cores"]
-template_names = ["ScI_m_0_t_4000","ScII_m_0_t_4000"
-                  ]
+template_names = ["HI_m_0_t_4000"]
+
 for template_name in template_names:
     print(template_name)
     # Read the initial spectrum template from a FITS file
@@ -70,11 +70,11 @@ for template_name in template_names:
 
     # Calculate the differences between adjacent radial velocities
     radial_velocities_diff = np.diff(radial_velocities)
-    pdb.set_trace()
+    #pdb.set_trace()
 
     # Remove the last radial velocity and phase angle value to match the differences
     radial_velocities = radial_velocities[:-1]
-    phase_angles = phase_angles[:-1]
+    #phase_angles = phase_angles[:-1]
 
     # Introduce the stellar model
     stellar_wavelength_grid = generate_wavelength_grid(wendel_min, wendel_max, resolution)
@@ -83,15 +83,16 @@ for template_name in template_names:
     flux = interpolate_planet_spectrum(wave, flux, stellar_wavelength_grid)
     wave = stellar_wavelength_grid
 
-
-    def simulate_transite(j, flux, wave, exposures, v_mag, trim_val):
-
+    def simulate_transite(j, flux, wave, rvs, v_mag, vsys):
+        import matplotlib.pyplot as plt
+        from scipy.interpolate import interp1d
+        import scipy.ndimage as scint
         # Import necessary modules for plotting, numerical operations, and custom functions
         import numpy as np
         from planet_spectrum import read_kitz_template  # Custom functions for spectrum manipulation
         from planet_spectrum import rv_broadening
         from maths_functions import doppler_shift  # Custom function for resolution calculation
-        from cross_correlate import apply_cross_correlation, kp_vsys_diagram, trim_array
+        from cross_correlate import apply_cross_correlation, make_kp_vsys
 
         # Initialize lists to store the shifted spectra
         waves = []
@@ -100,19 +101,30 @@ for template_name in template_names:
 
         # Apply radial velocity broadening to the spectrum, and also shift lines to correct position and store the results
         # We also combine the stellar model and the planet model together through summation
-        for i in range(0, exposures):
+        for i in range(0, len(rvs)):
             # ensure that the random seed changes for each loop
-            flux_rv = rv_broadening(wave, flux, radial_velocities_diff[i])
+            flux = rv_broadening(wave, flux, radial_velocities_diff[i])
 
-            # calculate_snr_based_on_v_mag(v_mag)
-            flux_rv = flux_rv + stellar_noise_spectrum[i] + 1
-            wave_shift = doppler_shift(wave, radial_velocities[i])
-            waves.append(wave_shift)
-            fluxes.append(flux_rv)
+            #Shifting signal based on planet velocity
+            wave_shift = doppler_shift(wave, rvs[i])
+
+            #Shifting signal to stellar rest frame
+            wave_shift = doppler_shift(wave_shift, vsys*-1)
+
+            # Interpolate the original flux values onto the new, shifted wavelength grid
+            # Ensure that the interpolation is done within the bounds of the original wavelength array
+            flux_interpolator = interp1d(wave, flux, kind='nearest', fill_value="extrapolate")
+            flux_rv_shifted = flux_interpolator(wave_shift)
+            flux_rv_shifted = flux_rv_shifted + stellar_noise_spectrum[i]
+
+            # Store the shifted wavelength and flux values
+            waves.append(wave)  # Store the shifted wavelengths if needed
+            fluxes.append(flux_rv_shifted)
+
 
         ccfs_dir = f'ccf_output/{template_name}/m{str(mag_val)}/'
         ensure_dir(ccfs_dir)
-        np.save(ccfs_dir + 'orbital_velocities.npy', radial_velocities)
+        np.save(ccfs_dir + 'orbital_velocities.npy', rvs)
         np.save(ccfs_dir + 'wave_grid.npy', wave)
 
         # Load the spectral template for cross-correlation.
@@ -122,8 +134,7 @@ for template_name in template_names:
         ccf, rv_grid = apply_cross_correlation(waves, fluxes, rv_bounds, template)
 
         # Create a Kp-Vsys diagram based on the loaded cross-correlation function.
-        kp_vsys = kp_vsys_diagram(ccf, phase_angles, np.linspace(kpvsys_min, kpvsys_max, kpvsys_max),
-                                  velocity_semiamplitude)
+        kp_vsys = make_kp_vsys(ccf, phase_angles)
 
 
         return [rv_grid, ccf, kp_vsys]
@@ -134,11 +145,10 @@ for template_name in template_names:
 
         save_noise_arrays(number_transit, wave, phase_angles, mag_val)
         print(f"Simulating v_mag: {mag_val}")
-        par_list = [[i, flux, wave, exposures, mag_val, trim_val] for i in range(1, number_transit+1)]
+        par_list = [[i, flux, wave, radial_velocities, mag_val, vsys] for i in range(1, number_transit+1)]
 
         ccf_results = Parallel(n_jobs=number_of_cores)(
-            delayed(simulate_transite)(j, flux, wave, exposures,mag_val,trim_val) for j, flux, wave,exposures,mag_val,
-            trim_val in par_list)
+            delayed(simulate_transite)(j, flux, wave, radial_velocities,mag_val,vsys) for j, flux, wave, rvs,mag_val,vsys in par_list)
 
         ccfs = []
         kpvsyss = []

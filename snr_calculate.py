@@ -1,4 +1,4 @@
-def calculate_snr_based_on_v_mag(m, snr_ref=35, m_ref=7.6):
+def calculate_snr_based_on_v_mag(m, snr_ref=72, m_ref=10):
     import math
     """
     Calculate the new SNR for a star with a different magnitude.
